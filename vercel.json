@@ -1,9 +1,3 @@
 {
-  "version": 2,
-  "public": true,
-  "functions": {
-    "api/chat.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "version": 2
 }
