@@ -6,19 +6,20 @@ export default async function handler(req, res) {
   try {
     const body = req.body;
 
-    // Vapi sends call data in the message object
     const call = body?.message?.call || body?.call || {};
     const transcript = body?.message?.transcript || body?.transcript || 'No transcript available';
-    const summary = body?.message?.analysis?.summary || 'No summary available';
+    const summary = body?.message?.analysis?.summary || '';
 
-    // Extract structured data from call
+    // Extract structured fields from Vapi summary or transcript
     const callerNumber = call?.customer?.number || 'Unknown';
     const callDuration = call?.endedAt && call?.startedAt
-      ? Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000)
+      ? Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000) + ' seconds'
       : 'Unknown';
 
-    // Send email via EmailJS REST API
-    const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    // Parse what Alex collected from the summary
+    const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -26,30 +27,18 @@ export default async function handler(req, res) {
         template_id: 'template_2ol8kg3',
         user_id: 'MKgwkbObxQ7iO26RQ',
         template_params: {
-          to_email: 'Joel@jaxmastersroofing.com',
-          from_name: 'JaxMasters Voice Agent',
-          subject: `New Roofing Lead — Caller: ${callerNumber}`,
-          message: `
-NEW LEAD FROM VOICE AGENT
-=========================
-Caller Number: ${callerNumber}
-Call Duration: ${callDuration} seconds
-
-CALL SUMMARY:
-${summary}
-
-FULL TRANSCRIPT:
-${transcript}
-          `.trim()
+          customer_name: 'See transcript',
+          customer_email: 'N/A — Voice Call',
+          customer_phone: callerNumber,
+          address: 'See transcript',
+          service_type: 'Voice Call Intake',
+          preferred_date: 'See transcript',
+          notes: summary || 'See full transcript below',
+          submitted_at: now,
+          conversation: transcript
         }
       })
     });
-
-    if (!emailRes.ok) {
-      const errText = await emailRes.text();
-      console.error('EmailJS error:', errText);
-      return res.status(500).json({ error: 'Email failed', detail: errText });
-    }
 
     return res.status(200).json({ success: true });
 
