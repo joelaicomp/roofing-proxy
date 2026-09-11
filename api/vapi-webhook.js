@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     const callerNumber = call?.customer?.number || 'Unknown';
     const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
 
-    // Use structured data if available, fallback to raw caller number
+    // Use structured data if available, fallback to raw values
     const name = structured.caller_name || 'See transcript';
     const phone = structured.phone_number || callerNumber;
     const email = structured.caller_email || 'See transcript';
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     const issue = structured.roof_issue || 'See transcript';
     const callbackTime = structured.callback_time || 'See transcript';
     const urgency = structured.urgency || 'See transcript';
+    const leadSource = structured.lead_source || 'See transcript';
 
     const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
           service_type: issue,
           preferred_date: callbackTime,
           notes: urgency,
+          lead_source: leadSource,
           submitted_at: now,
           conversation: transcript
         }
