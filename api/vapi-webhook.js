@@ -7,7 +7,6 @@ export default async function handler(req, res) {
     const body = req.body;
     const messageType = body?.message?.type;
 
-    // Only send email on End of Call Report
     if (messageType !== 'end-of-call-report') {
       return res.status(200).json({ received: true, skipped: true });
     }
@@ -25,6 +24,7 @@ export default async function handler(req, res) {
         service_id: 'service_y3gfka9',
         template_id: 'template_2ol8kg3',
         user_id: 'MKgwkbObxQ7iO26RQ',
+        accessToken: 'A8dhS2Qxqb0GWFMXvqU1o',
         template_params: {
           customer_name: 'See transcript',
           customer_email: 'N/A — Voice Call',
