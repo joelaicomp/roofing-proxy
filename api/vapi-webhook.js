@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         service_id: 'service_y3gfka9',
-        template_id: 'template_2ol8kg3',
+        template_id: 'template_dzztr0f',
         user_id: 'MKgwkbObxQ7iO26RQ',
         accessToken: 'A8dhS2Qxqb0GWFMXvqU1o',
         template_params: {
