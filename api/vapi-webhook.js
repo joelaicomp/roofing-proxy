@@ -5,21 +5,20 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body;
+    const messageType = body?.message?.type;
 
-    const call = body?.message?.call || body?.call || {};
-    const transcript = body?.message?.transcript || body?.transcript || 'No transcript available';
-    const summary = body?.message?.analysis?.summary || '';
+    // Only send email on End of Call Report
+    if (messageType !== 'end-of-call-report') {
+      return res.status(200).json({ received: true, skipped: true });
+    }
 
-    // Extract structured fields from Vapi summary or transcript
+    const call = body?.message?.call || {};
+    const transcript = body?.message?.transcript || 'No transcript available';
+    const summary = body?.message?.analysis?.summary || 'No summary available';
     const callerNumber = call?.customer?.number || 'Unknown';
-    const callDuration = call?.endedAt && call?.startedAt
-      ? Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000) + ' seconds'
-      : 'Unknown';
-
-    // Parse what Alex collected from the summary
     const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
 
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -33,12 +32,19 @@ export default async function handler(req, res) {
           address: 'See transcript',
           service_type: 'Voice Call Intake',
           preferred_date: 'See transcript',
-          notes: summary || 'See full transcript below',
+          notes: summary,
           submitted_at: now,
           conversation: transcript
         }
       })
     });
+
+    const emailText = await emailRes.text();
+    console.log('EmailJS response:', emailText);
+
+    if (!emailRes.ok) {
+      return res.status(500).json({ error: 'Email failed', detail: emailText });
+    }
 
     return res.status(200).json({ success: true });
 
