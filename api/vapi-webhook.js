@@ -13,9 +13,18 @@ export default async function handler(req, res) {
 
     const call = body?.message?.call || {};
     const transcript = body?.message?.transcript || 'No transcript available';
-    const summary = body?.message?.analysis?.summary || 'No summary available';
+    const structured = body?.message?.analysis?.structuredData || {};
     const callerNumber = call?.customer?.number || 'Unknown';
     const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+    // Use structured data if available, fallback to raw caller number
+    const name = structured.caller_name || 'See transcript';
+    const phone = structured.phone_number || callerNumber;
+    const email = structured.caller_email || 'See transcript';
+    const address = structured.address || 'See transcript';
+    const issue = structured.roof_issue || 'See transcript';
+    const callbackTime = structured.callback_time || 'See transcript';
+    const urgency = structured.urgency || 'See transcript';
 
     const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -26,13 +35,13 @@ export default async function handler(req, res) {
         user_id: 'MKgwkbObxQ7iO26RQ',
         accessToken: 'A8dhS2Qxqb0GWFMXvqU1o',
         template_params: {
-          customer_name: 'See transcript',
-          customer_email: 'N/A — Voice Call',
-          customer_phone: callerNumber,
-          address: 'See transcript',
-          service_type: 'Voice Call Intake',
-          preferred_date: 'See transcript',
-          notes: summary,
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          address: address,
+          service_type: issue,
+          preferred_date: callbackTime,
+          notes: urgency,
           submitted_at: now,
           conversation: transcript
         }
